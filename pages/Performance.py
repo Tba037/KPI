@@ -2,18 +2,19 @@ import streamlit as st
 import gspread
 import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
+import altair as alt
+import json
 from st_aggrid import AgGrid, GridOptionsBuilder
 
 # ----- Connect to Google Sheet -----
 @st.cache_resource
 def connect_gsheet(x):
+    creds_dict = st.secrets["projectkpidashboard"]  # read secret
     scope = [
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive",
     ]
-    creds = ServiceAccountCredentials.from_json_keyfile_name(
-        "projectkpidashboard.json", scope
-    )
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
     client = gspread.authorize(creds)
     spreadsheet = client.open_by_key("1bxVq20N1G9UIyek6BVMgpEMOvQJib-j7Jbsfj82KZtE")
     sheet = spreadsheet.worksheet(x)
