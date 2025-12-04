@@ -3,4 +3,4 @@ gspread
 oauth2client
 pandas
 altair
-st-aggrid
+streamlit-aggrid
