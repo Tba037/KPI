@@ -165,6 +165,10 @@ def calculate_kpi_performance(df7, Month, Year):
 
 def calculate_total_kpi(kpi1, kpi2, kpi3, kpi4, kpi5, kpi6, Month, Year):
     return pd.DataFrame({
+        "Target": [0],
+        "Realisasi": [0],
+        "%": [0],
+        "Poin": [0],
         "Final": [kpi1["Final"][0] + kpi2["Final"][0] + kpi3["Final"][0] + kpi4["Final"][0] + kpi5["Final"][0] + kpi6["Final"][0]]
     }, index=[f"TOTAL KPI {Month} {Year}"])
 
