@@ -193,6 +193,18 @@ def main_app():
     kpi6 = calculate_kpi_performance(df7, Month, Year)
     total = calculate_total_kpi(kpi1, kpi2, kpi3, kpi4, kpi5, kpi6, Month, Year)
     kpi_table = pd.concat([kpi1, kpi2, kpi3, kpi4, kpi5, kpi6, total])
+    # % progress bars
+    st.subheader("KPI Indicator")
+    kpi_bar = pd.concat([kpi1, kpi2, kpi3, kpi4, kpi5, kpi6])
+    for idx, row in kpi_bar.iterrows():
+        col1, col2, col3 = st.columns([5, 5, 2])  # adjust column widths
+        with col1:
+            st.write(f"**{idx}**")
+        with col2:
+            progress_value = int(min(max(row['%'], 0), 100))  # cap between 0-100
+            st.progress(progress_value)
+        with col3:
+            st.write(f"Final: {row['Final']}")
     # Show combined KPI table
     st.dataframe(kpi_table)
     # Create an in-memory output file for Excel
@@ -207,17 +219,5 @@ def main_app():
         file_name=f"KPI_{Month}_{Year}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-    # % progress bars
-    st.subheader("KPI Indicator")
-    kpi_bar = pd.concat([kpi1, kpi2, kpi3, kpi4, kpi5, kpi6])
-    for idx, row in kpi_bar.iterrows():
-        col1, col2, col3 = st.columns([5, 5, 2])  # adjust column widths
-        with col1:
-            st.write(f"**{idx}**")
-        with col2:
-            progress_value = int(min(max(row['%'], 0), 100))  # cap between 0-100
-            st.progress(progress_value)
-        with col3:
-            st.write(f"Final: {row['Final']}")
 
 main_app()
