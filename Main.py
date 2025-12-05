@@ -21,7 +21,6 @@ def connect_gsheet(x):
     return sheet
 
 # ----- Load Google Sheet into DataFrame -----
-@st.cache_data
 def load_data(x):
     sheet = connect_gsheet(x)
     data = sheet.get_all_records()
@@ -165,10 +164,6 @@ def calculate_kpi_performance(df7, Month, Year):
 
 def calculate_total_kpi(kpi1, kpi2, kpi3, kpi4, kpi5, kpi6, Month, Year):
     return pd.DataFrame({
-        "Target": [0],
-        "Realisasi": [0],
-        "%": [0],
-        "Poin": [0],
         "Final": [kpi1["Final"][0] + kpi2["Final"][0] + kpi3["Final"][0] + kpi4["Final"][0] + kpi5["Final"][0] + kpi6["Final"][0]]
     }, index=[f"TOTAL KPI {Month} {Year}"])
 
@@ -178,7 +173,7 @@ def main_app():
     st.set_page_config(page_title="KPI Indicator", layout="wide")
     st.title("📊 KPI Indicator")
     if st.button("Refresh Data"):
-        load_data.clear()
+        st.cache_data.clear()
         df, df2, df3, df4, df5, df6, df7 = loading_data()
         st.rerun()
     df, df2, df3, df4, df5, df6, df7 = loading_data()
@@ -212,7 +207,8 @@ def main_app():
     )
     # % progress bars
     st.subheader("KPI Indicator")
-    for idx, row in kpi_table.iterrows():
+    kpi_bar = pd.concat([kpi1, kpi2, kpi3, kpi4, kpi5, kpi6])
+    for idx, row in kpi_bar.iterrows():
         col1, col2, col3 = st.columns([5, 5, 2])  # adjust column widths
         with col1:
             st.write(f"**{idx}**")

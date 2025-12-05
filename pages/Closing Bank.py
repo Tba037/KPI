@@ -20,7 +20,6 @@ def connect_gsheet(x):
     return sheet
 
 # ----- Load Google Sheet into DataFrame -----
-@st.cache_data
 def load_data(x):
     sheet = connect_gsheet(x)
     data = sheet.get_all_records()
@@ -57,7 +56,7 @@ def main_app():
     st.set_page_config(page_title="Closing Bank", layout="wide")
     st.title("📊 Closing Bank")
     if st.button("Refresh Data"):
-        load_data.clear()
+        st.cache_data.clear()
         df, df2, df3, df4, df5, df6, df7 = loading_data()
         st.rerun()
     # Load data
@@ -98,7 +97,7 @@ def main_app():
                 else:
                     if st.button("Approve", key=f"approve_{idx}"):
                         append_to_database(pd.DataFrame([row]))
-                        load_data.clear()
+                        st.cache_data.clear()
                         df, df2, df3, df4, df5, df6, df7 = loading_data()
                         st.success("Row added!")
                         st.rerun()

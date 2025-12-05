@@ -21,7 +21,6 @@ def connect_gsheet(x):
     return sheet
 
 # ----- Load Google Sheet into DataFrame -----
-@st.cache_data
 def load_data(x):
     sheet = connect_gsheet(x)
     data = sheet.get_all_records()
@@ -55,7 +54,7 @@ def main_app():
     st.set_page_config(page_title="Performance", layout="wide")
     st.title("📊 Performance")
     if st.button("Refresh Data"):
-        load_data.clear()
+        st.cache_data.clear()
         df, df2, df3, df4, df5, df6, df7 = loading_data()
         st.rerun()
     # Load data
@@ -103,7 +102,7 @@ def main_app():
                 sheet = connect_gsheet("Database5")
                 for r in gsheet_rows_to_delete:
                     sheet.delete_rows(r)
-                load_data.clear()
+                st.cache_data.clear()
                 df, df2, df3, df4, df5, df6, df7 = loading_data()
                 st.success("Entry Deleted!")
                 st.rerun()
@@ -126,9 +125,9 @@ def main_app():
                     "Poin": new_poin
                 }])
                 append_to_database(new_row)  # Append to Google Sheet
-                load_data.clear()
+                st.cache_data.clear()
                 df, df2, df3, df4, df5, df6, df7 = loading_data()
-                st.success("New entry added!")
+                st.success("Entry added!")
                 st.rerun()
 
 main_app()
