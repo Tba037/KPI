@@ -4,6 +4,7 @@ import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 import altair as alt
 import json
+import io
 
 # ----- Connect to Google Sheet -----
 @st.cache_resource
@@ -162,6 +163,11 @@ def calculate_kpi_performance(df7, Month, Year):
         "Final": [round(final, 2)]
     }, index=["Pelanggaran Sop Kerja Poin Pengurangan Nilai Kpi Setiap Pelanggaran Yang Timbul"])
 
+def calculate_total_kpi(kpi1, kpi2, kpi3, kpi4, kpi5, kpi6, Month, Year):
+    return pd.DataFrame({
+        "Final": [kpi1["Final"][0] + kpi2["Final"][0] + kpi3["Final"][0] + kpi4["Final"][0] + kpi5["Final"][0] + kpi6["Final"][0]]
+    }, index=[f"TOTAL KPI {Month} {Year}"])
+
 # ----- Streamlit App -----
 def main_app():
     # Set wide layout
@@ -184,9 +190,22 @@ def main_app():
     kpi4 = calculate_kpi_closing_bank(df3, Month, Year)
     kpi5 = calculate_kpi_filing_ke_accounting(df5, Month, Year)
     kpi6 = calculate_kpi_performance(df7, Month, Year)
-    kpi_table = pd.concat([kpi1, kpi2, kpi3, kpi4, kpi5, kpi6])
+    total = calculate_total_kpi(kpi1, kpi2, kpi3, kpi4, kpi5, kpi6, Month, Year)
+    kpi_table = pd.concat([kpi1, kpi2, kpi3, kpi4, kpi5, kpi6, total])
     # Show combined KPI table
     st.dataframe(kpi_table)
+    # Create an in-memory output file for Excel
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:kpi_table.to_excel(writer, index=True, sheet_name="KPI")
+    # Rewind the buffer
+    output.seek(0)
+    # Download button
+    st.download_button(
+        label="Download KPI Table (Excel)",
+        data=output,
+        file_name=f"KPI_{Month}_{Year}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
     # % progress bars
     st.subheader("KPI Indicator")
     for idx, row in kpi_table.iterrows():
