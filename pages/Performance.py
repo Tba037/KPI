@@ -4,6 +4,7 @@ import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 import altair as alt
 import json
+import time
 from st_aggrid import AgGrid, GridOptionsBuilder
 
 # ----- Connect to Google Sheet -----
@@ -54,6 +55,7 @@ def main_app():
     st.set_page_config(page_title="Performance", layout="wide")
     st.title("📊 Performance")
     if st.button("Refresh Data"):
+        time.sleep(1)
         st.cache_data.clear()
         df, df2, df3, df4, df5, df6, df7 = loading_data()
         st.rerun()

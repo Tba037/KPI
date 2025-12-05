@@ -4,6 +4,7 @@ import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 import altair as alt
 import json
+import time
 import io
 
 # ----- Connect to Google Sheet -----
@@ -173,6 +174,7 @@ def main_app():
     st.set_page_config(page_title="KPI Indicator", layout="wide")
     st.title("📊 KPI Indicator")
     if st.button("Refresh Data"):
+        time.sleep(1)
         st.cache_data.clear()
         df, df2, df3, df4, df5, df6, df7 = loading_data()
         st.rerun()

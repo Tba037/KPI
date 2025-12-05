@@ -4,6 +4,7 @@ import pandas as pd
 from oauth2client.service_account import ServiceAccountCredentials
 import altair as alt
 import json
+import time
 
 # ----- Connect to Google Sheet -----
 @st.cache_resource
@@ -56,6 +57,7 @@ def main_app():
     st.set_page_config(page_title="Closing Bank", layout="wide")
     st.title("📊 Closing Bank")
     if st.button("Refresh Data"):
+        time.sleep(1)
         st.cache_data.clear()
         df, df2, df3, df4, df5, df6, df7 = loading_data()
         st.rerun()
