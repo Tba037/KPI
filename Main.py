@@ -80,7 +80,7 @@ def calculate_kpi_cancel(df, Month, Year, User):
         "%": [round(percentage, 2)],
         "Poin": [poin],
         "Final": [round(final, 2)]
-    }, index=["Cancel Icomming (Monthly) Pengurangan Setiap Adanya Cancel Incomming"])
+    }, index=["Cancel Incoming (Monthly) Pengurangan Setiap Adanya Cancel Incoming"])
 
 def calculate_kpi_tagih_invoice(df2, Month, Year):
     df2 = df2[(df2['Month'] == Month) & (df2['Year'] == Year)]
