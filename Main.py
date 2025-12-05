@@ -40,8 +40,8 @@ def loading_data():
     return df, df2, df3, df4, df5, df6, df7
 
 # ----- Calculate KPI 1 (Alokasi AR) -----
-def calculate_kpi_ar(df, Month, Year):
-    df = df[(df['Month'] == Month) & (df['Year'] == Year)]
+def calculate_kpi_ar(df, Month, Year, User):
+    df = df[(df['Month'] == Month) & (df['Year'] == Year) & (df['user'] == User)]
     target = df['DocNum'].count()
     realisasi = df['Poin'].sum()
     percentage = (realisasi / target) * 100 if target != 0 else 0
@@ -54,17 +54,25 @@ def calculate_kpi_ar(df, Month, Year):
         "%": [round(percentage, 2)],
         "Poin": [poin],
         "Final": [round(final, 2)]
-    }, index=["Alokasi Ar Tepat Waktu (Daily) H+1 Tanggal Uang Masuk"])
+    }, index=["Alokasi AR Tepat Waktu (Daily) H+1 Tanggal Uang Masuk"])
 
 # ----- Calculate KPI 2 (Cancelled Incoming) -----
-def calculate_kpi_cancel(df, Month, Year):
-    df = df[(df['Month'] == Month) & (df['Year'] == Year)]
+def calculate_kpi_cancel(df, Month, Year, User):
+    df = df[(df['Month'] == Month) & (df['Year'] == Year) & (df['user'] == User)]
     target = 0
     realisasi = df[df['Canceled'] == "Y"]['DocNum'].count()
-    total_docnum = df['DocNum'].count()
-    percentage = ((total_docnum - realisasi) / total_docnum) * 100 if total_docnum != 0 else 0
+    safe = 0
+    if realisasi < safe:
+        faktor_pengurang = 0
+    else:
+        faktor_pengurang = realisasi - safe
     poin = 100
-    final = poin * (percentage / 100)
+    final = poin - faktor_pengurang
+    if final < 0:
+        final = 0
+    else:
+        final = final
+    percentage = (final / poin) * 100
     
     return pd.DataFrame({
         "Target": [target],
@@ -180,13 +188,15 @@ def main_app():
         st.rerun()
     df, df2, df3, df4, df5, df6, df7 = loading_data()
     Year = st.selectbox("Select a year", df['Year'].sort_values().unique())
-    month_order = ["January", "February", "March", "April", "May", "June","July", "August", "September", "October", "November", "December"]
     months = df[df['Year'] == Year]['Month'].unique()
+    month_order = ["January", "February", "March", "April", "May", "June","July", "August", "September", "October", "November", "December"]
     months = [m for m in month_order if m in months]  # keeps calendar order
     Month = st.selectbox("Select a month", months)
+    user = df[(df['Year'] == Year) & (df['Month'] == Month)]['user'].unique()
+    User = st.selectbox("Select a user", user)
     # Calculate KPIs
-    kpi1 = calculate_kpi_ar(df, Month, Year)
-    kpi2 = calculate_kpi_cancel(df, Month, Year)
+    kpi1 = calculate_kpi_ar(df, Month, Year, User)
+    kpi2 = calculate_kpi_cancel(df, Month, Year, User)
     kpi3 = calculate_kpi_tagih_invoice(df2, Month, Year)
     kpi4 = calculate_kpi_closing_bank(df3, Month, Year)
     kpi5 = calculate_kpi_filing_ke_accounting(df5, Month, Year)
@@ -194,9 +204,20 @@ def main_app():
     total = calculate_total_kpi(kpi1, kpi2, kpi3, kpi4, kpi5, kpi6, Month, Year)
     kpi_table = pd.concat([kpi1, kpi2, kpi3, kpi4, kpi5, kpi6, total])
     # % progress bars
-    st.subheader("KPI Indicator")
-    kpi_bar = pd.concat([kpi1, kpi2, kpi3, kpi4, kpi5, kpi6])
+    st.subheader("KPI Indicator per User")
+    kpi_bar = pd.concat([kpi1, kpi2])
     for idx, row in kpi_bar.iterrows():
+        col1, col2, col3 = st.columns([5, 5, 2])  # adjust column widths
+        with col1:
+            st.write(f"**{idx}**")
+        with col2:
+            progress_value = int(min(max(row['%'], 0), 100))  # cap between 0-100
+            st.progress(progress_value)
+        with col3:
+            st.write(f"Final: {row['Final']}")
+    st.subheader("KPI Indicator by Division")
+    kpi_bar2 = pd.concat([kpi3, kpi4, kpi5, kpi6])
+    for idx, row in kpi_bar2.iterrows():
         col1, col2, col3 = st.columns([5, 5, 2])  # adjust column widths
         with col1:
             st.write(f"**{idx}**")
