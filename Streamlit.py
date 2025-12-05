@@ -20,7 +20,6 @@ def connect_gsheet():
 
 def check_credentials(username, password, sheet):
     records = sheet.get_all_records()
-
     for row in records:
         if str(row.get("username")) == username and str(row.get("password")) == password:
             return True
