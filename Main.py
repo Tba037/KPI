@@ -61,7 +61,7 @@ def calculate_kpi_cancel(df, Month, Year, User):
     df = df[(df['Month'] == Month) & (df['Year'] == Year) & (df['user'] == User)]
     target = 0
     realisasi = df[df['Canceled'] == "Y"]['DocNum'].count()
-    safe = 0
+    safe = 10
     if realisasi < safe:
         faktor_pengurang = 0
     else:
@@ -110,7 +110,7 @@ def calculate_kpi_closing_bank(df3, Month, Year):
         realisasi = df3['Timestamp'].max()
     else:
         realisasi = "Butuh Approval"
-    if realisasi is not "Butuh Approval":
+    if realisasi != "Butuh Approval":
         selisih = (pd.to_datetime(realisasi).date() - pd.to_datetime(target).date()).days
         percentage = 100 if selisih <= 0 else 0
     else:
@@ -138,7 +138,7 @@ def calculate_kpi_filing_ke_accounting(df5, Month, Year):
         realisasi = df5['Timestamp'].max()
     else:
         realisasi = "Butuh Approval"
-    if realisasi is not "Butuh Approval":
+    if realisasi != "Butuh Approval":
         selisih = (pd.to_datetime(realisasi).date() - pd.to_datetime(target).date()).days
         percentage = 100 if selisih <= 0 else 0
     else:
@@ -192,8 +192,11 @@ def main_app():
     month_order = ["January", "February", "March", "April", "May", "June","July", "August", "September", "October", "November", "December"]
     months = [m for m in month_order if m in months]  # keeps calendar order
     Month = st.selectbox("Select a month", months)
+    # % progress bars
+    st.subheader("KPI Indicator per User")
     user = df[(df['Year'] == Year) & (df['Month'] == Month)]['user'].unique()
     User = st.selectbox("Select a user", user)
+
     # Calculate KPIs
     kpi1 = calculate_kpi_ar(df, Month, Year, User)
     kpi2 = calculate_kpi_cancel(df, Month, Year, User)
@@ -203,8 +206,8 @@ def main_app():
     kpi6 = calculate_kpi_performance(df7, Month, Year)
     total = calculate_total_kpi(kpi1, kpi2, kpi3, kpi4, kpi5, kpi6, Month, Year)
     kpi_table = pd.concat([kpi1, kpi2, kpi3, kpi4, kpi5, kpi6, total])
-    # % progress bars
-    st.subheader("KPI Indicator per User")
+
+    # Display KPIs
     kpi_bar = pd.concat([kpi1, kpi2])
     for idx, row in kpi_bar.iterrows():
         col1, col2, col3 = st.columns([5, 5, 2])  # adjust column widths
@@ -230,7 +233,8 @@ def main_app():
     st.dataframe(kpi_table)
     # Create an in-memory output file for Excel
     output = io.BytesIO()
-    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:kpi_table.to_excel(writer, index=True, sheet_name="KPI")
+    with pd.ExcelWriter(output, engine="xlsxwriter") as writer:
+        kpi_table.to_excel(writer, index=True, sheet_name="KPI")
     # Rewind the buffer
     output.seek(0)
     # Download button
