@@ -98,24 +98,27 @@ def calculate_kpi_tagih_invoice(df2, Month, Year):
         "Final": [round(final, 2)]
     }, index=["Keberhasilan Penagihan (Khusus Tempo) %Invoice Jt >14 Hari Setiap Bulannya"])
 
-def calculate_kpi_closing_bank(df3, Month, Year):
-    df3 = df3[(df3['Month'] == Month) & (df3['Year'] == Year)]
+def calculate_kpi_closing_bank(df4, Month, Year):
+    df4 = df4[(df4['Month'] == Month) & (df4['Year (YYYY)'] == Year)]
     # Convert Timestamp column to datetime
-    df3['Timestamp'] = pd.to_datetime(df3['Timestamp'], errors='coerce', dayfirst=True)
+    df4['Timestamp'] = pd.to_datetime(df4['Timestamp'], errors='coerce', format="%m/%d/%Y %H:%M:%S")
     # Target deadline
     target = pd.to_datetime(f"10 {Month} {Year}", format="%d %B %Y")
     target = target + pd.DateOffset(months=1)
+
     # Take the latest closing timestamp for the selected month
-    if df3['Timestamp'].notna().any():
-        realisasi = df3['Timestamp'].max()
+    if df4['Timestamp'].notna().any():
+        realisasi = df4['Timestamp'].min()
     else:
-        realisasi = "Butuh Approval"
-    if realisasi != "Butuh Approval":
+        realisasi = "Belum Upload"
+
+    if realisasi != "Belum Upload":
         selisih = (pd.to_datetime(realisasi).date() - pd.to_datetime(target).date()).days
         percentage = 100 if selisih <= 0 else 0
     else:
-        selisih = "Butuh Approval"
+        selisih = "Belum Upload"
         percentage = 0
+
     poin = 100
     final = poin * (percentage / 100)
     
@@ -127,23 +130,27 @@ def calculate_kpi_closing_bank(df3, Month, Year):
         "Final": [round(final, 2)],
     }, index=["Closing Bank (Credit) Tepat Waktu (Monthly) Setiap Tanggal 10 Bulan Berikutnya"])
 
-def calculate_kpi_filing_ke_accounting(df5, Month, Year):
-    df5 = df5[(df5['Month'] == Month) & (df5['Year'] == Year)]
+def calculate_kpi_filing_ke_accounting(df6, Month, Year):
+    df6 = df6[(df6['Month'] == Month) & (df6['Year (YYYY)'] == Year)]
     # Convert Timestamp column to datetime
-    df5['Timestamp'] = pd.to_datetime(df5['Timestamp'], errors='coerce', dayfirst=True)
+    df6['Timestamp'] = pd.to_datetime(df6['Timestamp'], errors='coerce', format="%m/%d/%Y %H:%M:%S")
     # Target deadline
-    target = pd.to_datetime(f"1 {Month} {Year}", format="%d %B %Y") + pd.offsets.MonthEnd(0)
+    target = pd.to_datetime(f"1 {Month} {Year}", format="%d %B %Y")
+    target = target - pd.DateOffset(months=1) + pd.offsets.MonthEnd(0)
+
     # Take the latest closing timestamp for the selected month
-    if df5['Timestamp'].notna().any():
-        realisasi = df5['Timestamp'].max()
+    if df6['Timestamp'].notna().any():
+        realisasi = df6['Timestamp'].max()
     else:
-        realisasi = "Butuh Approval"
-    if realisasi != "Butuh Approval":
+        realisasi = "Belum Upload"
+
+    if realisasi != "Belum Upload":
         selisih = (pd.to_datetime(realisasi).date() - pd.to_datetime(target).date()).days
         percentage = 100 if selisih <= 0 else 0
     else:
-        selisih = "Butuh Approval"
+        selisih = "Belum Upload"
         percentage = 0
+
     poin = 100
     final = poin * (percentage / 100)
     
@@ -201,8 +208,8 @@ def main_app():
     kpi1 = calculate_kpi_ar(df, Month, Year, User)
     kpi2 = calculate_kpi_cancel(df, Month, Year, User)
     kpi3 = calculate_kpi_tagih_invoice(df2, Month, Year)
-    kpi4 = calculate_kpi_closing_bank(df3, Month, Year)
-    kpi5 = calculate_kpi_filing_ke_accounting(df5, Month, Year)
+    kpi4 = calculate_kpi_closing_bank(df4, Month, Year)
+    kpi5 = calculate_kpi_filing_ke_accounting(df6, Month, Year)
     kpi6 = calculate_kpi_performance(df7, Month, Year)
     total = calculate_total_kpi(kpi1, kpi2, kpi3, kpi4, kpi5, kpi6, Month, Year)
     kpi_table = pd.concat([kpi1, kpi2, kpi3, kpi4, kpi5, kpi6, total])
