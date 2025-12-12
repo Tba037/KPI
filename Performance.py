@@ -66,7 +66,9 @@ def main_app():
     months = df[df['Year'] == Year]['Month'].unique()
     months = [m for m in month_order if m in months]  # keeps calendar order
     Month = st.selectbox("Select a month", months)
-    filtered_form = df7[(df7['Month'] == Month) & (df7['Year'] == Year)]
+    user = df[(df['Year'] == Year) & (df['Month'] == Month)]['user'].unique()
+    User = st.selectbox("Select a user", user)
+    filtered_form = df7[(df7['Month'] == Month) & (df7['Year'] == Year) & (df7['User'] == User)]
     filtered_form = filtered_form.reset_index()   # <--- Keeps original index as 'index'
     filtered_form.rename(columns={'index': 'row_id'}, inplace=True)
     total_poin = filtered_form["Poin"].sum()
@@ -78,8 +80,9 @@ def main_app():
     gb.configure_column("row_id", headerName="ID", width=5)
     gb.configure_column("Month", width=20)
     gb.configure_column("Year", width=20)
-    gb.configure_column("Details", width=150)
+    gb.configure_column("Details", width=120)
     gb.configure_column("Poin", width=20)
+    gb.configure_column("User", width=50)
     grid_options = gb.build()
     # Show interactive table
     grid_response = AgGrid(

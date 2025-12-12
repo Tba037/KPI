@@ -45,7 +45,7 @@ def calculate_kpi_ar(df, Month, Year, User):
     target = df['DocNum'].count()
     realisasi = df['Poin'].sum()
     percentage = (realisasi / target) * 100 if target != 0 else 0
-    poin = 100
+    poin = 50
     final = poin * (percentage / 100)
     
     return pd.DataFrame({
@@ -61,18 +61,19 @@ def calculate_kpi_cancel(df, Month, Year, User):
     df = df[(df['Month'] == Month) & (df['Year'] == Year) & (df['user'] == User)]
     target = 0
     realisasi = df[df['Canceled'] == "Y"]['DocNum'].count()
-    safe = 10
-    if realisasi < safe:
+    if realisasi <= 20:
         faktor_pengurang = 0
+    elif realisasi <= 30:
+        faktor_pengurang = -5
+    elif realisasi <= 40:
+        faktor_pengurang = -10
+    elif realisasi <= 50:
+        faktor_pengurang = -15
     else:
-        faktor_pengurang = realisasi - safe
-    poin = 100
-    final = poin - faktor_pengurang
-    if final < 0:
-        final = 0
-    else:
-        final = final
-    percentage = (final / poin) * 100
+        faktor_pengurang = -20
+    poin = 0
+    final = poin + faktor_pengurang
+    percentage = 100 - ((faktor_pengurang / -20) * 100)
     
     return pd.DataFrame({
         "Target": [target],
@@ -87,7 +88,7 @@ def calculate_kpi_tagih_invoice(df2, Month, Year):
     target = df2['Document Number'].count()
     realisasi = df2['Poin'].sum()
     percentage = (realisasi / target) * 100 if target != 0 else 0
-    poin = 100
+    poin = 20
     final = poin * (percentage / 100)
     
     return pd.DataFrame({
@@ -105,21 +106,18 @@ def calculate_kpi_closing_bank(df4, Month, Year):
     # Target deadline
     target = pd.to_datetime(f"10 {Month} {Year}", format="%d %B %Y")
     target = target + pd.DateOffset(months=1)
-
     # Take the latest closing timestamp for the selected month
     if df4['Timestamp'].notna().any():
         realisasi = df4['Timestamp'].min()
     else:
         realisasi = "Belum Upload"
-
     if realisasi != "Belum Upload":
         selisih = (pd.to_datetime(realisasi).date() - pd.to_datetime(target).date()).days
         percentage = 100 if selisih <= 0 else 0
     else:
         selisih = "Belum Upload"
         percentage = 0
-
-    poin = 100
+    poin = 10
     final = poin * (percentage / 100)
     
     return pd.DataFrame({
@@ -137,21 +135,18 @@ def calculate_kpi_filing_ke_accounting(df6, Month, Year):
     # Target deadline
     target = pd.to_datetime(f"1 {Month} {Year}", format="%d %B %Y")
     target = target - pd.DateOffset(months=1) + pd.offsets.MonthEnd(0)
-
     # Take the latest closing timestamp for the selected month
     if df6['Timestamp'].notna().any():
         realisasi = df6['Timestamp'].max()
     else:
         realisasi = "Belum Upload"
-
     if realisasi != "Belum Upload":
         selisih = (pd.to_datetime(realisasi).date() - pd.to_datetime(target).date()).days
         percentage = 100 if selisih <= 0 else 0
     else:
         selisih = "Belum Upload"
         percentage = 0
-
-    poin = 100
+    poin = 10
     final = poin * (percentage / 100)
     
     return pd.DataFrame({
@@ -162,13 +157,13 @@ def calculate_kpi_filing_ke_accounting(df6, Month, Year):
         "Final": [round(final, 2)],
     }, index=["Serah Terima Dokumen Filing Ke Accounting 1 Bulan Setelah Periode Berjalan"])
 
-def calculate_kpi_performance(df7, Month, Year):
-    df7 = df7[(df7['Month'] == Month) & (df7['Year'] == Year)]
-    target = 100
-    realisasi = target + df7["Poin"].sum()
-    percentage = (realisasi / target) * 100 if target != 0 else 0
-    poin = 100
-    final = poin * (percentage / 100)
+def calculate_kpi_performance(df7, Month, Year, User):
+    df7 = df7[(df7['Month'] == Month) & (df7['Year'] == Year) & (df7['User'] == User)]
+    target = 0
+    poin = 10
+    realisasi = target - df7["Poin"].count()
+    final = poin + realisasi
+    percentage = (final / poin) * 100 if final >= 0 else 0
     
     return pd.DataFrame({
         "Target": [target],
@@ -180,6 +175,7 @@ def calculate_kpi_performance(df7, Month, Year):
 
 def calculate_total_kpi(kpi1, kpi2, kpi3, kpi4, kpi5, kpi6, Month, Year):
     return pd.DataFrame({
+        "Poin": [kpi1["Poin"][0] + kpi2["Poin"][0] + kpi3["Poin"][0] + kpi4["Poin"][0] + kpi5["Poin"][0] + kpi6["Poin"][0]],
         "Final": [kpi1["Final"][0] + kpi2["Final"][0] + kpi3["Final"][0] + kpi4["Final"][0] + kpi5["Final"][0] + kpi6["Final"][0]]
     }, index=[f"TOTAL KPI {Month} {Year}"])
 
@@ -210,12 +206,12 @@ def main_app():
     kpi3 = calculate_kpi_tagih_invoice(df2, Month, Year)
     kpi4 = calculate_kpi_closing_bank(df4, Month, Year)
     kpi5 = calculate_kpi_filing_ke_accounting(df6, Month, Year)
-    kpi6 = calculate_kpi_performance(df7, Month, Year)
+    kpi6 = calculate_kpi_performance(df7, Month, Year, User)
     total = calculate_total_kpi(kpi1, kpi2, kpi3, kpi4, kpi5, kpi6, Month, Year)
     kpi_table = pd.concat([kpi1, kpi2, kpi3, kpi4, kpi5, kpi6, total])
 
     # Display KPIs
-    kpi_bar = pd.concat([kpi1, kpi2])
+    kpi_bar = pd.concat([kpi1, kpi2, kpi6])
     for idx, row in kpi_bar.iterrows():
         col1, col2, col3 = st.columns([5, 5, 2])  # adjust column widths
         with col1:
@@ -226,7 +222,7 @@ def main_app():
         with col3:
             st.write(f"Final: {row['Final']}")
     st.subheader("KPI Indicator by Division")
-    kpi_bar2 = pd.concat([kpi3, kpi4, kpi5, kpi6])
+    kpi_bar2 = pd.concat([kpi3, kpi4, kpi5])
     for idx, row in kpi_bar2.iterrows():
         col1, col2, col3 = st.columns([5, 5, 2])  # adjust column widths
         with col1:
